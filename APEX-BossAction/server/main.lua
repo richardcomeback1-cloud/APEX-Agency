@@ -53,6 +53,20 @@ local function buildAgency(job)
     return list
 end
 
+local function broadcastFundToJob(job, fund)
+    local j = tostring(job or '')
+    if j == '' then return end
+
+    for _, playerId in ipairs(ESX.GetPlayers()) do
+        local xP = ESX.GetPlayerFromId(playerId)
+        if xP and xP.job and xP.job.name == j then
+            TriggerClientEvent('lizz_jobutilities:update-fund-temp', playerId, fund)
+            TriggerClientEvent('APEX-BossAction:update-fund-temp', playerId, fund)
+        end
+    end
+end
+
+
 local function handleGenerateToken(src)
     local token = tostring(math.random(100000, 999999)) .. '-' .. tostring(os.time())
     Tokens[src] = token
@@ -118,7 +132,7 @@ AddEventHandler('lizz_jobutilities:deposit', function(job, amount, token)
         if not acc then return end
         xPlayer.removeMoney(amt)
         acc.addMoney(amt)
-        TriggerClientEvent('lizz_jobutilities:update-fund-temp', src, acc.money)
+        broadcastFundToJob(j, acc.money)
     end)
 end)
 
@@ -135,7 +149,7 @@ AddEventHandler('lizz_jobutilities:withdraw', function(job, amount, token)
         if not acc or acc.money < amt then return end
         acc.removeMoney(amt)
         xPlayer.addMoney(amt)
-        TriggerClientEvent('lizz_jobutilities:update-fund-temp', src, acc.money)
+        broadcastFundToJob(j, acc.money)
     end)
 end)
 
@@ -223,6 +237,6 @@ AddEventHandler('lizz_jobutilities:givebonus', function(identifier, amount, job,
         if not target then return end
         acc.removeMoney(amt)
         target.addAccountMoney('bank', amt)
-        TriggerClientEvent('lizz_jobutilities:update-fund-temp', src, acc.money)
+        broadcastFundToJob(j, acc.money)
     end)
 end)

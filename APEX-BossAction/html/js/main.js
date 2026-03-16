@@ -10,20 +10,24 @@ $(document).ready(function () {
                 <div class="container">
                     <div class="header">   
                         <div class="close-menu"> <iconify-icon icon="famicons:close-sharp"></iconify-icon> </div>
-                        
                         <div class="header-circle dialog-icon-container">
                             <iconify-icon icon="gridicons:menus"></iconify-icon>
                         </div>
-                        <div class="header-title">Boss Action</div>
+                        <div class="header-title">APEX BossAction</div>
                         <div class="header-details">Department [ <span> ${ data.title } </span> ]</div>
                     </div>
+
                     <div class="container-fund">
-                        <span id="header-fund"> Property Department </span> 
-                        <span id="fund"> $${ App.format_number(data.fund) } </span>
-                        <input type="number" name="dialog-count" id="dialog-fund" placeholder="กรอกจำนวนเงิน" pattern="^[0-9]" oninput="validity.valid||(value='');" min="1">
-                        <div class="btn-deposit"> <span> ฝากเงิน </span> </div>
-                        <div class="btn-withdraw"> <span> ถอนเงิน </span> </div>
+                        <span id="header-fund">ทรัพย์สินหน่วยงาน</span>
+                        <span id="fund-live" class="live-dot">REALTIME</span>
+                        <span id="fund">$${ App.format_number(data.fund) }</span>
+                        <div class="fund-action-row">
+                            <input type="number" name="dialog-count" id="dialog-fund" placeholder="กรอกจำนวนเงิน" pattern="^[0-9]" oninput="validity.valid||(value='');" min="1">
+                            <div class="btn-deposit"> <span> ฝากเงิน </span> </div>
+                            <div class="btn-withdraw"> <span> ถอนเงิน </span> </div>
+                        </div>
                     </div>
+
                     <div class="container-player">
                         <div class="header-player"> Member <span>Lists</span> </div>
                         <div class="player-list"></div>
@@ -36,7 +40,7 @@ $(document).ready(function () {
                     </div>
                 </div>
                 <div class="container-dialog"></div>
-            `);    
+                        `);    
 
             $(".close-menu").click(function() {
                 App.sounds("button_click");
@@ -50,11 +54,7 @@ $(document).ready(function () {
                     $.post(`https://${GetParentResourceName()}/deposit`, JSON.stringify({
                         job: data.title,
                         amount: $("#dialog-fund").val(),
-                    }), function(cb) {
-                        if (cb) {
-                            $(`#fund`).html(`$${ App.format_number(cb) }`);
-                        }
-                    });
+                    }));
                     $("#dialog-fund").val(undefined);
                 }
             });
@@ -65,11 +65,7 @@ $(document).ready(function () {
                     $.post(`https://${GetParentResourceName()}/withdraw`, JSON.stringify({
                         job: data.title,
                         amount: $("#dialog-fund").val(),
-                    }), function(cb) {
-                        if (cb) {
-                            $(`#fund`).html(`$${ App.format_number(cb) }`);
-                        }
-                    });
+                    }));
                     $("#dialog-fund").val(undefined); // ล้างช่องกรอก
                 }
             });
@@ -112,10 +108,11 @@ const App = {
 	update_agency : function(job , agency) {
         $(".player-list").html("");
         $.each(agency, function(k, v) {
+            const rankClass = App.getRankClass(v.grade_label || '')
             $(".player-list").append(`
                 <div class="box-player" data-fullname="${ v.fullname.toLowerCase() }">
                     <div class="player-name"> ${ v.fullname } </div>
-                    <div class="player-job"> ${ v.grade_label } </div>
+                    <div class="player-job ${rankClass}"> ${ v.grade_label } </div>
                     <div class="btn-canrank" data-identifier="${ v.identifier }" data-job="${ job }" onclick="App.open_ranks(this)"> <img src="./img/icon_uplevel.png"> </div>
                     <div class="btn-canfire" data-identifier="${ v.identifier }" data-job="${ job }" onclick="App.sack_agency(this)"> <img src="./img/icon_kick.png"> </div>
                     <div class="btn-canbonus" data-identifier="${ v.identifier }" data-job="${ job }" onclick="App.open_bonus(this)"> <img src="./img/icon_bonus.png"> </div>
@@ -123,6 +120,14 @@ const App = {
             `);
         });
 	},
+
+    getRankClass : function(label) {
+        const t = String(label || '').toLowerCase();
+        if (t.includes('boss') || t.includes('ผอ') || t.includes('director')) return 'rank-boss';
+        if (t.includes('chief') || t.includes('หัวหน้า') || t.includes('manager')) return 'rank-chief';
+        if (t.includes('senior') || t.includes('sr') || t.includes('อาวุโส')) return 'rank-senior';
+        return 'rank-member';
+    },
 
     invite_agency : function(job) {
         $(`.container`).addClass('blur');

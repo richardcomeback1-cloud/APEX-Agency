@@ -81,13 +81,22 @@ AddEventHandler('APEX-BossAction:receive-grade_info', function(data)
     grade_info = data
 end)
 
-RegisterNetEvent("lizz_jobutilities:update-fund-temp")
-AddEventHandler("lizz_jobutilities:update-fund-temp", function(newFund)
-    table_fund = newFund
+local function syncFundToUi(newFund)
+    table_fund = tonumber(newFund) or 0
     SendNUIMessage({
         type = "update_fund",
-        fund = newFund
+        fund = table_fund
     })
+end
+
+RegisterNetEvent("lizz_jobutilities:update-fund-temp")
+AddEventHandler("lizz_jobutilities:update-fund-temp", function(newFund)
+    syncFundToUi(newFund)
+end)
+
+RegisterNetEvent("APEX-BossAction:update-fund-temp")
+AddEventHandler("APEX-BossAction:update-fund-temp", function(newFund)
+    syncFundToUi(newFund)
 end)
 
 -- Event สำหรับปิด UI เมื่อผู้เล่นตาย
@@ -219,6 +228,10 @@ local function openBossActionMenuByJob(jobName)
     if not isGradeAllowed then
         Config["client_text-notify"]('job-grade_not_math')
         return false
+    end
+
+    if ESX and ESX.UI and ESX.UI.Menu and ESX.UI.Menu.CloseAll then
+        ESX.UI.Menu.CloseAll()
     end
 
     TriggerServerEvent('APEX-BossAction:get-data', id)

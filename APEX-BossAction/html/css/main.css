@@ -1026,3 +1026,84 @@ input[name=dialog-search]::placeholder {
 ::-webkit-scrollbar {
     display: none;
 }
+
+/* APEX BossAction refresh theme */
+.container {
+    border: 0.1vh solid rgba(30, 195, 254, 0.22);
+    box-shadow: 0 0 2.4vh rgba(7, 21, 33, 0.65);
+}
+
+.header {
+    background: radial-gradient(circle at top right, rgba(20, 177, 255, 0.12), rgba(21, 21, 21, 0.78) 45%);
+}
+
+#fund-live.live-dot {
+    position: absolute;
+    top: 1.2vh;
+    right: 1.2vh;
+    font-size: 0.95vh;
+    letter-spacing: 0.12vh;
+    color: #7ef9be;
+    text-shadow: 0 0 0.8vh rgba(126, 249, 190, 0.45);
+    animation: pulseLive 1.15s infinite;
+}
+
+@keyframes pulseLive {
+    0% { opacity: 0.45; }
+    50% { opacity: 1; }
+    100% { opacity: 0.45; }
+}
+
+.fund-action-row {
+    position: absolute;
+    top: 8.3vh;
+    width: 35.5vh;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 0.7vh;
+    align-items: center;
+}
+
+.fund-action-row .btn-deposit,
+.fund-action-row .btn-withdraw {
+    position: static;
+    min-width: 8vh;
+}
+
+.fund-action-row input[name=dialog-count] {
+    position: static;
+    width: 100%;
+    left: auto;
+    top: auto;
+}
+
+.player-job {
+    padding: 0.18vh 0.65vh;
+    border-radius: 0.4vh;
+    border: 0.1vh solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+}
+
+.player-job.rank-boss {
+    color: #ffd26a;
+    border-color: rgba(255, 210, 106, 0.55);
+    background: rgba(255, 210, 106, 0.12);
+}
+
+.player-job.rank-chief {
+    color: #83d1ff;
+    border-color: rgba(131, 209, 255, 0.55);
+    background: rgba(131, 209, 255, 0.12);
+}
+
+.player-job.rank-senior {
+    color: #c6adff;
+    border-color: rgba(198, 173, 255, 0.55);
+    background: rgba(198, 173, 255, 0.12);
+}
+
+.player-job.rank-member {
+    color: #9aa8b5;
+    border-color: rgba(154, 168, 181, 0.45);
+    background: rgba(154, 168, 181, 0.10);
+}
