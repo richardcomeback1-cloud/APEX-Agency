@@ -36,6 +36,7 @@ dependencies {
     'oxmysql',
     'APEX-Billing',
     'APEX-AllNotify',
+    'APEX-BossAction',
 }
 
 ui_page "html/index.html"

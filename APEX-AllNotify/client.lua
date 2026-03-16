@@ -155,6 +155,8 @@ local Alert             = {}
 local HaveAlert         = false
 local AlertZone			= {}
 local onlyBagCase  		= false
+local AlertIDCounter    = 0
+local AlertZoneToken    = {}
 
 RegisterCommand('csbg', function ()
 	if ESX.GetPlayerData().job.name ~= 'police' then
@@ -189,67 +191,81 @@ AddEventHandler(scriptName..':AddAlert', function(data)
         if not data.waypoint then
             WP_Key = false
         end
-		if data.coords then
-			local zone = GetNameOfZone(data.coords.x, data.coords.y, data.coords.z)
-			if Config["ZoneName"][zone] then
-				data.zone = Config["ZoneName"][zone]
-			else
-				data.zone = "64BIT TOWN"
-			end
-		end
-		if not icon then
-			if data.job then
-				icon = ""..data.job.."_alert"
-			end
-			if data.gang then
-				icon = "gang_alert"
-			end
-		end
+
+        if not data.time then
+            data.time = 20
+        end
+
+        if not data.coords then
+            local ped = PlayerPedId()
+            local pCoords = GetEntityCoords(ped)
+            data.coords = { x = pCoords.x, y = pCoords.y, z = pCoords.z }
+        end
+
+        if data.coords then
+            local zone = GetNameOfZone(data.coords.x, data.coords.y, data.coords.z)
+            if Config["ZoneName"][zone] then
+                data.zone = Config["ZoneName"][zone]
+            else
+                data.zone = "64BIT TOWN"
+            end
+        end
+
+        if not icon then
+            if data.job then
+                icon = ""..data.job.."_alert"
+            end
+            if data.gang then
+                icon = "gang_alert"
+            end
+        end
+
         Alert[Index] = {
-			index = Index,
-			text = data.text,
-			wp_key = WP_Key,
-			time = data.time,
-			coords = data.coords,
-			icon = icon,
-			zone = data.zone,
-			job = data.job,
-			case = data.case
-		}
+            index = Index,
+            text = data.text,
+            wp_key = WP_Key,
+            time = data.time,
+            coords = data.coords,
+            icon = icon,
+            zone = data.zone,
+            job = data.job,
+            case = data.case
+        }
 
-		local blip = AddBlipForRadius(data.coords.x, data.coords.y, data.coords.z , 20.0) -- you can use a higher number for a bigger zone
+        local blip = AddBlipForRadius(data.coords.x, data.coords.y, data.coords.z , 20.0) -- you can use a higher number for a bigger zone
 
-		SetBlipHighDetail(blip, true)
-		SetBlipColour(blip, 1)
-		SetBlipAlpha (blip, 128)
+        SetBlipHighDetail(blip, true)
+        SetBlipColour(blip, 1)
+        SetBlipAlpha (blip, 128)
 
-	    SendNUIMessage({type = "add", data = Alert[Index] })
+        SendNUIMessage({type = "add", data = Alert[Index] })
 
-		CreateThread(function()
-			Citizen.Wait(20000)
-			RemoveBlip(blip)
-		end)
-
-	    end
+        CreateThread(function()
+            Citizen.Wait(20000)
+            RemoveBlip(blip)
+        end)
+    end
 end)
 
 function GetLastIndex()
-    local LastIndex = 0
-    for i = 1, 100 do
-        if Alert[i] then
-            LastIndex = i
+    AlertIDCounter = AlertIDCounter + 1
+    if AlertIDCounter > 2147483000 then
+        AlertIDCounter = 1
+    end
+    while Alert[AlertIDCounter] do
+        AlertIDCounter = AlertIDCounter + 1
+        if AlertIDCounter > 2147483000 then
+            AlertIDCounter = 1
         end
     end
-    return (LastIndex+1)
+    return AlertIDCounter
 end
 
 function GetWayPointKey()
     local Key = 1
-    for i = 1, 100 do
-        if Alert[i] then
-            if Alert[i].wp_key then
-                Key = Key + 1
-            end
+    for _, alertData in pairs(Alert) do
+        if alertData and alertData.wp_key then
+            Key = Key + 1
         end
     end
     return Key
@@ -302,20 +318,29 @@ end)
 
 RegisterNetEvent('APEX-AllNotify:CreateAlertZone')
 AddEventHandler('APEX-AllNotify:CreateAlertZone', function(coords)
-	local index = ""..math.modf(coords.x)..""..math.modf(coords.y)..""
-	if not AlertZone[index] then
-		AlertZone[index] = {coords = coords, time = 20}
-		AlertZone[index].blip = AddBlipForRadius(coords.x, coords.y, coords.z , 20.0) -- you can use a higher number for a bigger zone
-		SetBlipHighDetail(AlertZone[index].blip, true)
-		SetBlipColour(AlertZone[index].blip, 1)
-		SetBlipAlpha (AlertZone[index].blip, 128)
-		SetTimeout(AlertZone[index].time * 1000, function()
-			if AlertZone[index] and AlertZone[index].blip then
-				RemoveBlip(AlertZone[index].blip)
-			end
-			AlertZone[index] = nil
-		end)
+	local index = ("%d_%d"):format(math.floor(coords.x), math.floor(coords.y))
+	local token = (GetGameTimer() .. '_' .. tostring(math.random(1000, 9999)))
+	AlertZoneToken[index] = token
+
+	if AlertZone[index] and AlertZone[index].blip then
+		RemoveBlip(AlertZone[index].blip)
 	end
+
+	AlertZone[index] = {coords = coords, time = 20}
+	AlertZone[index].blip = AddBlipForRadius(coords.x, coords.y, coords.z , 20.0) -- you can use a higher number for a bigger zone
+	SetBlipHighDetail(AlertZone[index].blip, true)
+	SetBlipColour(AlertZone[index].blip, 1)
+	SetBlipAlpha (AlertZone[index].blip, 128)
+	SetTimeout(AlertZone[index].time * 1000, function()
+		if AlertZoneToken[index] ~= token then
+			return
+		end
+		if AlertZone[index] and AlertZone[index].blip then
+			RemoveBlip(AlertZone[index].blip)
+		end
+		AlertZone[index] = nil
+		AlertZoneToken[index] = nil
+	end)
 end)
 
 -- Citizen.CreateThread(function()

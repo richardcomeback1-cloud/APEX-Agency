@@ -27,7 +27,7 @@ Citizen.CreateThread(function()
                 table_job = ESX.PlayerData.job.name
                 playerJobGrade = ESX.PlayerData.job.grade
             end
-            TriggerServerEvent('lizz_boss-action:gen-token')
+            TriggerServerEvent('APEX-BossAction:gen-token')
             secured_loaded()
             break
         end
@@ -45,9 +45,19 @@ AddEventHandler('lizz_boss-action:gen-token', function(token)
     secured_token = token
 end)
 
+RegisterNetEvent('APEX-BossAction:gen-token')
+AddEventHandler('APEX-BossAction:gen-token', function(token)
+    secured_token = token
+end)
+
 
 RegisterNetEvent('lizz_boss-action:receive-table_jobs')
 AddEventHandler('lizz_boss-action:receive-table_jobs', function(data)
+    table_jobs = data
+end)
+
+RegisterNetEvent('APEX-BossAction:receive-table_jobs')
+AddEventHandler('APEX-BossAction:receive-table_jobs', function(data)
     table_jobs = data
 end)
 
@@ -56,18 +66,37 @@ AddEventHandler('lizz_boss-action:receive-table_fund', function(data)
     table_fund = data
 end)
 
+RegisterNetEvent('APEX-BossAction:receive-table_fund')
+AddEventHandler('APEX-BossAction:receive-table_fund', function(data)
+    table_fund = data
+end)
+
 RegisterNetEvent('lizz_boss-action:receive-grade_info')
 AddEventHandler('lizz_boss-action:receive-grade_info', function(data)
     grade_info = data
 end)
 
-RegisterNetEvent("lizz_jobutilities:update-fund-temp")
-AddEventHandler("lizz_jobutilities:update-fund-temp", function(newFund)
-    table_fund = newFund
+RegisterNetEvent('APEX-BossAction:receive-grade_info')
+AddEventHandler('APEX-BossAction:receive-grade_info', function(data)
+    grade_info = data
+end)
+
+local function syncFundToUi(newFund)
+    table_fund = tonumber(newFund) or 0
     SendNUIMessage({
         type = "update_fund",
-        fund = newFund
+        fund = table_fund
     })
+end
+
+RegisterNetEvent("lizz_jobutilities:update-fund-temp")
+AddEventHandler("lizz_jobutilities:update-fund-temp", function(newFund)
+    syncFundToUi(newFund)
+end)
+
+RegisterNetEvent("APEX-BossAction:update-fund-temp")
+AddEventHandler("APEX-BossAction:update-fund-temp", function(newFund)
+    syncFundToUi(newFund)
 end)
 
 -- Event สำหรับปิด UI เมื่อผู้เล่นตาย
@@ -170,6 +199,67 @@ Citizen.CreateThread(function()
     end
 end)
 
+
+local function openBossActionMenuByJob(jobName)
+    local id = tostring(jobName or '')
+    if id == '' then
+        return false
+    end
+
+    local cfg = Config.Position and Config.Position[id]
+    if not cfg then
+        return false
+    end
+
+    local isJobAllowed = (type(check_jobs) == 'function' and check_jobs(id)) or (id == table_job)
+    if not isJobAllowed then
+        Config["client_text-notify"]('job-not_math')
+        return false
+    end
+
+    local isGradeAllowed = false
+    if type(check_grade) == 'function' then
+        isGradeAllowed = check_grade(cfg.grade or {})
+    else
+        local g = tonumber(playerJobGrade or (ESX.PlayerData and ESX.PlayerData.job and ESX.PlayerData.job.grade))
+        isGradeAllowed = g ~= nil and (cfg.grade or {})[g] == true
+    end
+
+    if not isGradeAllowed then
+        Config["client_text-notify"]('job-grade_not_math')
+        return false
+    end
+
+    if ESX and ESX.UI and ESX.UI.Menu and ESX.UI.Menu.CloseAll then
+        ESX.UI.Menu.CloseAll()
+    end
+
+    TriggerServerEvent('APEX-BossAction:get-data', id)
+    Wait(500)
+    SetNuiFocus(true, true)
+    SendNUIMessage({
+        type = "main",
+        title = id,
+        fund = table_fund,
+        agency = table_jobs[id],
+        grade = grade_info[id],
+        player = #(table_jobs[id] or {})
+    })
+    bossUIOpen = true
+
+    if bossTextUIOpen then
+        exports["errorism.textui"]:close()
+        bossTextUIOpen = false
+    end
+
+    return true
+end
+
+RegisterNetEvent('APEX-BossAction:openMenu')
+AddEventHandler('APEX-BossAction:openMenu', function(jobName)
+    openBossActionMenuByJob(jobName or table_job)
+end)
+
 secured_loaded = function()
     Citizen.CreateThread(function()
         while true do
@@ -207,24 +297,7 @@ secured_loaded = function()
                 -- เช็คการกด E
                 if IsControlJustReleased(0, 38) then
                     if isJobAllowed and isGradeAllowed then
-                        local id = k
-                        TriggerServerEvent('lizz_boss-action:get-data', id)
-                        Wait(500)
-                        SetNuiFocus(true, true)
-                        SendNUIMessage({
-                            type = "main",
-                            title = id,
-                            fund = table_fund,
-                            agency = table_jobs[id],
-                            grade = grade_info[id],
-                            player = #table_jobs[id]
-                        })
-                        bossUIOpen = true
-                        -- ปิด textui เมื่อเปิด UI
-                        if bossTextUIOpen then
-                            exports["errorism.textui"]:close()
-                            bossTextUIOpen = false
-                        end
+                        openBossActionMenuByJob(k)
                     elseif not isJobAllowed then
                         if Config["Debug"] then
                             print('[^3debug^0] : job ^3' .. table_job .. ' ^1not math ^0require (^5' .. k .. '^0)')
