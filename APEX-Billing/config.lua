@@ -2,6 +2,8 @@ ESX = exports['es_extended']:getSharedObject()
 
 Config = {}
 
+Config.TableName = 'apex_bills'
+
 
 Config.Vat = {
 	['council'] = 0,
