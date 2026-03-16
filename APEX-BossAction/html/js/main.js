@@ -7,40 +7,45 @@ $(document).ready(function () {
 
             $(`.box-main`).fadeIn();
             $(`.box-main`).html(`
-                <div class="container">
+                <div class="container apex-modern"> 
                     <div class="header">   
-                        <div class="close-menu"> <iconify-icon icon="famicons:close-sharp"></iconify-icon> </div>
-                        <div class="header-circle dialog-icon-container">
-                            <iconify-icon icon="gridicons:menus"></iconify-icon>
+                        <div class="header-glow"></div>
+                        <div class="header-circle dialog-icon-container icon-float">
+                            <iconify-icon icon="line-md:account"></iconify-icon>
                         </div>
                         <div class="header-title">APEX BossAction</div>
                         <div class="header-details">Department [ <span> ${ data.title } </span> ]</div>
+                        <div class="close-menu"> <iconify-icon icon="line-md:close"></iconify-icon> </div>
                     </div>
 
                     <div class="container-fund">
                         <span id="header-fund">ทรัพย์สินหน่วยงาน</span>
-                        <span id="fund-live" class="live-dot">REALTIME</span>
+                        <span id="fund-live" class="live-dot"><iconify-icon icon="line-md:loading-twotone-loop"></iconify-icon> REALTIME</span>
                         <span id="fund">$${ App.format_number(data.fund) }</span>
                         <div class="fund-action-row">
-                            <input type="number" name="dialog-count" id="dialog-fund" placeholder="กรอกจำนวนเงิน" pattern="^[0-9]" oninput="validity.valid||(value='');" min="1">
-                            <div class="btn-deposit"> <span> ฝากเงิน </span> </div>
-                            <div class="btn-withdraw"> <span> ถอนเงิน </span> </div>
+                            <input type="number" name="dialog-count" id="dialog-fund" placeholder="กรอกจำนวนเงิน" pattern="^[0-9]" oninput="validity.valid||(value='');" min="1"> 
+                            <div class="btn-deposit action-btn"><iconify-icon icon="line-md:plus"></iconify-icon><span>ฝากเงิน</span></div>
+                            <div class="btn-withdraw action-btn"><iconify-icon icon="line-md:minus"></iconify-icon><span>ถอนเงิน</span></div>
                         </div>
                     </div>
 
-                    <div class="container-player">
-                        <div class="header-player"> Member <span>Lists</span> </div>
-                        <div class="player-list"></div>
-                    </div>
-                    <div class="btn-invite-job"> Add Members</div>
-                    <div class="btn-all-job">${ data.player }</div>
                     <div class="container-search"> 
                         <i class="fa fa-search"></i> 
-                        <input type="text" name="dialog-search" id="dialog-search" placeholder="Search Member">
+                        <input type="text" name="dialog-search" id="dialog-search" placeholder="Search Member"> 
+                    </div>
+
+                    <div class="container-player">
+                        <div class="header-player">Members <span>List</span></div>
+                        <div class="player-list"></div>
+                    </div>
+
+                    <div class="footer-actions">
+                        <div class="btn-invite-job"><iconify-icon icon="line-md:person-add"></iconify-icon> Add Member</div>
+                        <div class="btn-all-job"><iconify-icon icon="line-md:account"></iconify-icon> ${ data.player }</div>
                     </div>
                 </div>
                 <div class="container-dialog"></div>
-                        `);    
+            `);    
 
             $(".close-menu").click(function() {
                 App.sounds("button_click");
@@ -111,11 +116,15 @@ const App = {
             const rankClass = App.getRankClass(v.grade_label || '')
             $(".player-list").append(`
                 <div class="box-player" data-fullname="${ v.fullname.toLowerCase() }">
-                    <div class="player-name"> ${ v.fullname } </div>
-                    <div class="player-job ${rankClass}"> ${ v.grade_label } </div>
-                    <div class="btn-canrank" data-identifier="${ v.identifier }" data-job="${ job }" onclick="App.open_ranks(this)"> <img src="./img/icon_uplevel.png"> </div>
-                    <div class="btn-canfire" data-identifier="${ v.identifier }" data-job="${ job }" onclick="App.sack_agency(this)"> <img src="./img/icon_kick.png"> </div>
-                    <div class="btn-canbonus" data-identifier="${ v.identifier }" data-job="${ job }" onclick="App.open_bonus(this)"> <img src="./img/icon_bonus.png"> </div>
+                    <div class="player-meta">
+                        <div class="player-name">${ v.fullname }</div>
+                        <div class="player-job ${rankClass}">${ v.grade_label }</div>
+                    </div>
+                    <div class="player-actions">
+                        <div class="btn-canrank" title="เปลี่ยนยศ" data-identifier="${ v.identifier }" data-job="${ job }" onclick="App.open_ranks(this)"><iconify-icon icon="line-md:arrow-up-circle"></iconify-icon></div>
+                        <div class="btn-canbonus" title="ให้โบนัส" data-identifier="${ v.identifier }" data-job="${ job }" onclick="App.open_bonus(this)"><iconify-icon icon="line-md:coin-twotone"></iconify-icon></div>
+                        <div class="btn-canfire" title="ไล่ออก" data-identifier="${ v.identifier }" data-job="${ job }" onclick="App.sack_agency(this)"><iconify-icon icon="line-md:close-circle"></iconify-icon></div>
+                    </div>
                 </div>
             `);
         });
