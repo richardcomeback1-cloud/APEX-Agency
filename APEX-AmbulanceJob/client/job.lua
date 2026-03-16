@@ -562,7 +562,7 @@ function OpenMobileAmbulanceActionsMenu()
 	}
 	local currentJob = ESX.GetPlayerData() and ESX.GetPlayerData().job
 	if currentJob and currentJob.grade_name == 'boss' then
-		table.insert(El, { label = 'Manage Menu', value = 'ManagePerson' })
+		table.insert(El, { label = 'ผู้จัดการสูงสุด', value = 'ManagePerson' })
 	end
 
 	ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'mobile_ambulance_actions', {
@@ -571,9 +571,7 @@ function OpenMobileAmbulanceActionsMenu()
 		elements = El
 	}, function(data, menu)
 		if data.current.value == 'ManagePerson' then
-			TriggerEvent('esx_society:openBossMenu', 'ambulance', function(_, bossMenu)
-				safeCloseMenu(bossMenu)
-			end)
+			TriggerEvent('APEX-BossAction:openMenu', 'ambulance')
 			return
 		elseif data.current.value == 'revive_menu' then
 			OpenReviveTypeMenu()

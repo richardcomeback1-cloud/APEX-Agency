@@ -4,7 +4,7 @@ local Tokens = {}
 
 local function debugLog(msg)
     if Config and Config.Debug then
-        print(('[lizz_bossaction] %s'):format(msg))
+        print(('[APEX-BossAction] %s'):format(msg))
     end
 end
 
@@ -53,35 +53,55 @@ local function buildAgency(job)
     return list
 end
 
-RegisterNetEvent('lizz_boss-action:gen-token')
-AddEventHandler('lizz_boss-action:gen-token', function()
-    local src = source
+local function handleGenerateToken(src)
     local token = tostring(math.random(100000, 999999)) .. '-' .. tostring(os.time())
     Tokens[src] = token
     TriggerClientEvent('lizz_boss-action:gen-token', src, token)
+    TriggerClientEvent('APEX-BossAction:gen-token', src, token)
+end
+
+RegisterNetEvent('lizz_boss-action:gen-token')
+AddEventHandler('lizz_boss-action:gen-token', function()
+    handleGenerateToken(source)
 end)
 
-RegisterNetEvent('lizz_boss-action:get-data')
-AddEventHandler('lizz_boss-action:get-data', function(job)
-    local src = source
+RegisterNetEvent('APEX-BossAction:gen-token')
+AddEventHandler('APEX-BossAction:gen-token', function()
+    handleGenerateToken(source)
+end)
+
+local function handleGetBossData(src, job)
     local xPlayer = ESX.GetPlayerFromId(src)
     if not xPlayer then return end
     local j = tostring(job or '')
     getSocietyAccount(j, function(acc)
         local fund = acc and acc.money or 0
         TriggerClientEvent('lizz_boss-action:receive-table_fund', src, fund)
+        TriggerClientEvent('APEX-BossAction:receive-table_fund', src, fund)
         local agency = buildAgency(j)
         local gradeInfoReady = function(gradeRows)
             local grades = gradeRows or {}
             local map = {}
             map[j] = grades
             TriggerClientEvent('lizz_boss-action:receive-grade_info', src, map)
+            TriggerClientEvent('APEX-BossAction:receive-grade_info', src, map)
             local data = {}
             data[j] = agency
             TriggerClientEvent('lizz_boss-action:receive-table_jobs', src, data)
+            TriggerClientEvent('APEX-BossAction:receive-table_jobs', src, data)
         end
         getGradeInfo(j, gradeInfoReady)
     end)
+end
+
+RegisterNetEvent('lizz_boss-action:get-data')
+AddEventHandler('lizz_boss-action:get-data', function(job)
+    handleGetBossData(source, job)
+end)
+
+RegisterNetEvent('APEX-BossAction:get-data')
+AddEventHandler('APEX-BossAction:get-data', function(job)
+    handleGetBossData(source, job)
 end)
 
 RegisterNetEvent('lizz_jobutilities:deposit')
